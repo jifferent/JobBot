@@ -14,6 +14,7 @@ import urllib
 import time
 import re
 import random
+import string
 from traceback import format_exc
 from requests.exceptions import ConnectionError, ReadTimeout
 import HTMLParser
@@ -130,7 +131,7 @@ class WXBot:
 
         special_users = ['newsapp', 'fmessage', 'filehelper', 'weibo', 'qqmail',
                          'fmessage', 'tmessage', 'qmessage', 'qqsync', 'floatbottle',
-                         'lbsapp', 'shakeapp', 'medianote', 'qqfriend', 'readerapp',
+                         'lbsapp', 'shakeaspp', 'medianote', 'qqfriend', 'readerapp',
                          'blogapp', 'facebookapp', 'masssendapp', 'meishiapp',
                          'feedsapp', 'voip', 'blogappweixin', 'weixin', 'brandsessionholder',
                          'weixinreminder', 'wxid_novlwrv3lqwv11', 'gh_22b87fa7cb3c',
