@@ -9,17 +9,17 @@ GROUP_ID = ""
 
 class JobBot(WXBot):
     
-    callback = {
-        '!help': self.replyto_help,
-        '!jobs': self.replyto_jobs,
-        '!display': self.replyto_display,
-        '!my': self.replyto_my,
-        '!delete': self.replyto_delete,
-        '!push': self.replyto_push,
-    }
 
     def __init__(self):
         WXBot.__init__(self)
+        self.callback = {
+            '!help': self.replyto_help,
+            '!jobs': self.replyto_jobs,
+            '!display': self.replyto_display,
+            '!my': self.replyto_my,
+            '!delete': self.replyto_delete,
+            '!push': self.replyto_push,
+        }
 
     def handle_msg_all(self, msg):
         try:
@@ -43,6 +43,12 @@ class JobBot(WXBot):
         commands = msg.strip().split()
         return commands[1] if len(commands) > 1 else None
 
+    def check_job_id(self, job_id, all_jobs):
+        for job in all_jobs:
+            if job_id == job["id"]:
+                return True
+        return False
+        
     def is_to_self(self, msg):
         pass
 
@@ -68,7 +74,7 @@ class JobBot(WXBot):
             note = "There is no job for now"
         else:
             for job in jobs:
-                note += "ID: "job["id"], ", Title: " + job["title"]
+                note += "ID: {}, Title: {}".format(job['id'], job['title'])
         self.send_msg_by_uid(note, GROUP_ID)
 
     def get_all_jobs():
@@ -107,25 +113,15 @@ class JobBot(WXBot):
             job["content"] = content_msg
             job["user"] = meg["user"]
             all_jobs.append(job)
-            data_file.write(json.dumps({"jobs":all_jobs })
+            data_file.write(json.dumps({"jobs":all_jobs }))
         except:
             note = "Please format you posting to: !push title: CS jobs content: This is a job"
         self.send_msg_by_uid(note, GROUP_ID)
-
-    def check_job_id(self, job_id, all_jobs):
-        for job in all_jobs:
-            if job_id == job["id"]:
-                return True
-        return False
-        
         
     def replyto_my(self, msg):
         pass
 
-    def replyto_my_id(self, msg):
-        pass
-
-    def replyto_delete_id(self, msg):
+    def replyto_delete(self, msg):
         pass
 
 def main():
