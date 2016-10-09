@@ -23,7 +23,9 @@ class JobBot(WXBot):
 
     def handle_msg_all(self, msg):
         try:
+            print "Start handling all msg"
             command = self.arg(msg, 1)
+            print "commands is " + commands
             if command in self.callback:
                 self.callback[command](msg)
         except:
@@ -75,7 +77,10 @@ class JobBot(WXBot):
         else:
             for job in jobs:
                 note += "ID: {}, Title: {}".format(job['id'], job['title'])
-        self.send_msg_by_uid(note, GROUP_ID)
+
+        user_id = self.get_user_id("朱brobro")
+        self.send_msg_by_uid(note, user_id)
+        # self.send_msg_by_uid(note, GROUP_ID)
 
     def get_all_jobs():
         with open(os.path.join(self.temp_pwd, 'jobs.json'), 'r') as data_file:    

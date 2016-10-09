@@ -610,13 +610,13 @@ class WXBot:
                 # print '[DEBUG] sync_check:', retcode, selector
                 if retcode == '1100':  # 从微信客户端上登出
                     break
-                elif retcode == '1101':  # 从其它设备上登了网页微信
+                if retcode == '1101':  # 从其它设备上登了网页微信
                     break
                 elif retcode == '0':
                     if selector == '2':  # 有新消息
                         r = self.sync()
                         if r is not None:
-                            self.handle_msg(r)
+                            self.handle_msg_all(r)
                     elif selector == '3':  # 未知
                         r = self.sync()
                         if r is not None:
@@ -969,6 +969,7 @@ class WXBot:
             return
         self.status_notify()
         self.get_contact()
+        print len(self.group_list)
         print '[INFO] Get %d contacts' % len(self.contact_list)
         print '[INFO] Start to process messages .'
         self.proc_msg()
@@ -1134,7 +1135,8 @@ class WXBot:
             'synckey': self.sync_key_str,
             '_': int(time.time()),
         }
-        url = 'https://' + self.sync_host + '.weixin.qq.com/cgi-bin/mmwebwx-bin/synccheck?' + urllib.urlencode(params)
+        # url = 'https://' + self.sync_host + '.weixin.qq.com/cgi-bin/mmwebwx-bin/synccheck?' + urllib.urlencode(params)
+        url = 'https://' + self.sync_host + '.wechat.com/cgi-bin/mmwebwx-bin/synccheck?' + urllib.urlencode(params)
         try:
             r = self.session.get(url, timeout=60)
             r.encoding = 'utf-8'
