@@ -3,7 +3,10 @@
 
 from wxbot import *
 import ConfigParser
-import json
+import ujson
+import sys
+import traceback
+import random
 
 GROUP_ID = ""
 
@@ -20,16 +23,24 @@ class JobBot(WXBot):
             '!delete': self.replyto_delete,
             '!push': self.replyto_push,
         }
+        self.id_job_map = {}
+        with open(os.path.join(self.temp_pwd, 'jobs.json'), 'r') as data_file:
+            for line in data_file:
+                entry = ujson.loads(line.strip())
+                self.id_job_map[entry['id']] = entry
 
     def handle_msg_all(self, msg):
         try:
             print "Start handling all msg"
             command = self.arg(msg, 1)
-            print "commands is " + commands
             if command in self.callback:
                 self.callback[command](msg)
+            else:
+                print "No such command: {}".format(command)
         except:
+            traceback.print_exc()
             print "Error happen in user to group"
+
 
     def is_command(self, msg, command):
         return msg['content']['data'].startswith(command)
@@ -42,20 +53,17 @@ class JobBot(WXBot):
         Example: self.arg("!job", 2) returns None
         Example: self.arg("!job d2e198a wahahahaha", 1) returns !job
         """
-        commands = msg.strip().split()
-        return commands[1] if len(commands) > 1 else None
+        commands = msg['content']['data'].strip().split()
+        return commands[num - 1] if len(commands) > num - 1 else None
 
-    def check_job_id(self, job_id, all_jobs):
-        for job in all_jobs:
-            if job_id == job["id"]:
-                return True
-        return False
-        
+    def random_number_string(self, length=4):
+        return ''.join(random.choice('0123456789') for _ in range(length))
+
     def is_to_self(self, msg):
-        pass
+        return msg['msg_type_id'] == 4
 
     def is_to_group(self, msg):
-        pass
+        return msg['msg_type_id'] == 3
 
     def is_from_bot(self, msg):
         pass
@@ -71,7 +79,7 @@ class JobBot(WXBot):
         # Display menu
         note = ""
         # Get jobs
-        jobs = get_all_jobs()
+        jobs = self.get_all_jobs()
         if len(jobs) == 0:
             note = "There is no job for now"
         else:
@@ -82,7 +90,7 @@ class JobBot(WXBot):
         self.send_msg_by_uid(note, user_id)
         # self.send_msg_by_uid(note, GROUP_ID)
 
-    def get_all_jobs():
+    def get_all_jobs(self):
         with open(os.path.join(self.temp_pwd, 'jobs.json'), 'r') as data_file:    
             jobs = json.loads(data_file).get("jobs", [])
         return jobs
@@ -97,32 +105,41 @@ class JobBot(WXBot):
         pass
 
     def replyto_push(self, msg):
-        title = "title:"
-        content = "content:"
-        note = ""
         try:
-            pure_msg = msg["content"]["data"].split("!push", '')[1]
-            title_msg = pure_msg.split(title, 1)[1].split(content, 1)[0]
-            content_msg = pure_msg.split(contect, 1)[1]
-            note = "You job posting has been record"
-            # Save to tile
-            with open(os.path.join(self.temp_pwd, 'jobs.json'), 'a') as data_file:    
-                jobs = json.loads(data_file)
-            all_jobs = jobs.get("jobs", [])
+            msg_pure = msg["content"]["data"].split("!push")[1].strip()
+            if not msg_pure.startswith('title:'):
+                print 'There is no title'
+                return
+            if 'content:' not in msg_pure:
+                print 'There is no content'
+                return
             job = {}
+            job["title"] = ''.join(msg_pure.split('title:')[1]).split('content:')[0].strip()
+            job["content"] = ''.join(msg_pure.split('content:')[1]).strip()
+            job["user"] = msg["user"]
             while(True):
-                job["id"] = random.randrange(1, 1000)
-                if check_job_id(job["id"], all_jobs) is False:
+                job["id"] = self.random_number_string()
+                if job['id'] not in self.id_job_map:
                     break
-            job["title"] = title_msg
-            job["content"] = content_msg
-            job["user"] = meg["user"]
-            all_jobs.append(job)
-            data_file.write(json.dumps({"jobs":all_jobs }))
+            note = "You job posting has been recorded. Job ID: {}".format(job['id'])
+            with open(os.path.join(self.temp_pwd, 'jobs.json'), 'a') as data_file:
+                data_file.write(ujson.dumps(job) + '\n')
+            self.id_job_map[job["id"]] = job
+            if self.is_to_group(msg):
+                self.send_msg_by_uid(note, GROUP_ID)
+            elif self.is_to_self(msg):
+                self.send_msg_by_uid(note, msg['user']['id'])
         except:
-            note = "Please format you posting to: !push title: CS jobs content: This is a job"
-        self.send_msg_by_uid(note, GROUP_ID)
-        
+            traceback.print_exc()
+            note =\
+            """
+            Please format you posting to: !push title: <Job Posting Title> content: <Job Posting Content>
+
+            Example 1:
+            !push title: 数据分析实习生 contant: 要求会VBA, 熟悉EXCEL指令, 本科文凭, blah blah blah
+            """
+            self.send_msg_by_uid(note, GROUP_ID)
+
     def replyto_my(self, msg):
         pass
 

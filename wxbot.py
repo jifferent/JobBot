@@ -616,7 +616,7 @@ class WXBot:
                     if selector == '2':  # 有新消息
                         r = self.sync()
                         if r is not None:
-                            self.handle_msg_all(r)
+                            self.handle_msg(r)
                     elif selector == '3':  # 未知
                         r = self.sync()
                         if r is not None:
