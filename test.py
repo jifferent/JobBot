@@ -1,28 +1,42 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from wxbot import *
+from job_bot import JobBot
+from constants import *
 
 
-class MyWXBot(WXBot):
-    def handle_msg_all(self, msg):
-        if msg['msg_type_id'] == 4 and msg['content']['type'] == 0:
-            self.send_msg_by_uid(u'hi', msg['user']['id'])
-            #self.send_img_msg_by_uid("img/1.png", msg['user']['id'])
-            #self.send_file_msg_by_uid("img/1.png", msg['user']['id'])
-'''
-    def schedule(self):
-        self.send_msg(u'张三', u'测试')
-        time.sleep(1)
-'''
+class JobBotTester:
+    def initialize(self):
+        self.bot = JobBot()
+        self.msg_
 
+    def test_replyto_help(self):
+        assert self.bot.replyto_help()
 
-def main():
-    bot = MyWXBot()
-    bot.DEBUG = True
-    bot.conf['qr'] = 'png'
-    bot.run()
+    def test_replyto_jobs(self):
+        pass
 
+    def test_replyto_display(self):
+        pass
+
+    def test_replyto_push(self):
+        pass
+
+    def test_replyto_my(self):
+        pass
+
+    def test_replyto_delete(self):
+        pass
+
+    def finish(self):
+        pass
 
 if __name__ == '__main__':
-    main()
+    tester = JobBotTester()
+    tester.test_replyto_help()
+    tester.test_replyto_jobs()
+    tester.test_replyto_display()
+    tester.test_replyto_push()
+    tester.test_replyto_my()
+    tester.test_replyto_delete()
+

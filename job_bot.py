@@ -8,67 +8,12 @@ import sys
 import traceback
 import random
 import datetime
+from constants import *
 
 GROUP_ID = ""
 
-MSG_HELP = """List of commands:
-
-
-!help - 显示帮助信息
-
-!jobs - 显示所有的职位Posting, 包括职位ID和职位Title。不包括Detail
-
-!display <职位ID> - 显示一个职位的ID, Title, Detail, 还有发布者
-
-!push title - <职位Title> detail: <职位Detail> - 发布新的职位。详细使用说明请打!push, 还是不懂的话请联系群主(⊙ˍ⊙)
-
-!my - 显示自己的发布的所有职位
-
-!delete <职位ID>: 删除一条自己发布过的职位"""
-
-MSG_TITLE_AND_LIST = """{}
-
-{}"""
-
-MSG_DISPLAY_NO_JOBID = """Please format you posting to: !display <job ID>
-
-Example 1:
-!display 1111 - This will display the information for job 1111"""
-
-MSG_DISPLAY = """Job ID: {}
-Posted by: {}
-
-{}
-{}"""
-
-MSG_NO_SUCH_JOB = """No such job ID"""
-
-MSG_PUSH_NO_TITLE = """Your message does not contain title. We can't process your request."""
-
-MSG_PUSH_NO_DETAIL = """Your message does not contain detail. We can't process your request."""
-
-MSG_PUSH_SUCCESS = """You job posting has been recorded. Job ID: {}"""
-
-MSG_PUSH_ERROR = """Please format you posting to: !push title: <Job Posting Title> detail: <Job Posting Detail>
-
-Example 1:
-!push title: 数据分析实习生 contant: 要求会VBA, 熟悉EXCEL指令, 本科文凭, blah blah blah"""
-
-MSG_MY_ERROR = """Sorry, I can't process this request"""
-
-MSG_DELETE_ERROR = """Please format you posting to: !delete <id>
-
-Example 1:
-!delete 1111 - If job 1111 belongs to you, then job 1111 will be removed"""
-
-MSG_DELETE_SUCCESS = """Job removed: {}"""
-
-MSG_JOB_NOT_BELONGTO_SENDER = """You did not post this job"""
-
-
 class JobBot(WXBot):
     
-
     def __init__(self):
         WXBot.__init__(self)
         self.callback = {
@@ -90,7 +35,8 @@ class JobBot(WXBot):
             print "Start handling all msg"
             command = self.arg(msg, 1)
             if command in self.callback:
-                self.callback[command](msg)
+                note = self.callback[command](msg)
+                self.respond_to_user(msg, note)
             else:
                 print "No such command: {}".format(command.encode('utf-8'))
         except:
@@ -146,11 +92,7 @@ class JobBot(WXBot):
         )
 
     def replyto_help(self, msg):
-        """
-        Author: Zhu BroBro
-        Bot reply to user with '!help'
-        """
-        self.respond_to_user(msg, MSG_HELP)
+       return MSG_HELP
 
     def get_all_jobs(self):
         with open(os.path.join(self.temp_pwd, 'jobs.json'), 'r') as data_file:    
@@ -159,38 +101,31 @@ class JobBot(WXBot):
 
     def replyto_jobs(self, msg):
         jobs = [self.id_job_map[id] for id in self.id_job_map]
-        note = self.make_note_from_job_list(jobs, "Here are the jobs that you have posted:")
-        self.respond_to_user(msg, note)
+        return self.make_note_from_job_list(jobs, "Here are the jobs that you have posted:")
 
     def replyto_display(self, msg):
         job_id = self.arg(msg, 2)
         if job_id is None:
-            self.respond_to_user(msg, MSG_DISPLAY_NO_JOBID)
-            return
+            return MSG_DISPLAY_NO_JOBID
         if job_id not in self.id_job_map:
-            self.respond_to_user(msg, MSG_NO_SUCH_JOB)
-            return
+            return MSG_NO_SUCH_JOB
         job = self.id_job_map[job_id]
         if not self.is_job_belongsto_sender(job, msg):
-            self.respond_to_user(msg, MSG_JOB_NOT_BELONGTO_SENDER)
-            return
-        note = MSG_DISPLAY.format(
-            job_id,
-            job['user']['name'].encode('utf-8'),
-            job['title'].encode('utf-8'),
-            job['detail'].encode('utf-8')
-        )
-        self.respond_to_user(msg, note)
+            return MSG_JOB_NOT_BELONGTO_SENDER
+        return MSG_DISPLAY.format(
+                job_id,
+                job['user']['name'].encode('utf-8'),
+                job['title'].encode('utf-8'),
+                job['detail'].encode('utf-8')
+            )
 
     def replyto_push(self, msg):
         try:
             msg_pure = msg["content"]["data"].split("!push")[1].strip()
             if not msg_pure.startswith('title:'):
-                self.respond_to_user(msg, MSG_PUSH_NO_TITLE)
-                return
+                return MSG_PUSH_NO_TITLE
             if 'detail:' not in msg_pure:
-                self.respond_to_user(msg, MSG_PUSH_NO_DETAIL)
-                return
+                return MSG_PUSH_NO_DETAIL
             job = {}
             job["title"] = ''.join(msg_pure.split('title:')[1]).split('detail:')[0].strip()
             job["detail"] = ''.join(msg_pure.split('detail:')[1]).strip()
@@ -200,14 +135,13 @@ class JobBot(WXBot):
                 job["id"] = self.random_number_string()
                 if job['id'] not in self.id_job_map:
                     break
-            note = MSG_PUSH_SUCCESS.format(job['id'].encode('utf-8'))
             with open(os.path.join(self.temp_pwd, 'jobs.json'), 'a') as data_file:
                 data_file.write(ujson.dumps(job) + '\n')
             self.id_job_map[job["id"]] = job
-            self.respond_to_user(msg, note)
+            return MSG_PUSH_SUCCESS.format(job['id'].encode('utf-8'))
         except:
             traceback.print_exc()
-            self.respond_to_user(msg, MSG_PUSH_ERROR)
+            return MSG_PUSH_ERROR
 
     def replyto_my(self, msg):
         try:
@@ -215,21 +149,18 @@ class JobBot(WXBot):
             for _, job in self.id_job_map.iteritems():
                 if job['user']['id'] == msg['user']['id']:
                     user_jobs.append(job)
-            note = self.make_note_from_job_list(user_jobs, "Here are the jobs that you have posted:")
-            self.respond_to_user(msg, note)
+            return self.make_note_from_job_list(user_jobs, "Here are the jobs that you have posted:")
         except:
             traceback.print_exc()
-            self.respond_to_user(msg, MSG_MY_ERROR)
+            return MSG_MY_ERROR
 
     def replyto_delete(self, msg):
         try:
             job_id = msg['content']['data'].split('!delete')[1].strip()
             if job_id not in self.id_job_map:
-                self.respond_to_user(msg, MSG_NO_SUCH_JOB)
-                return
+                return MSG_NO_SUCH_JOB
             if not self.is_job_belongsto_sender(self.id_job_map[job_id], msg):
-                self.respond_to_user(msg, MSG_JOB_NOT_BELONGTO_SENDER)
-                return
+                return MSG_JOB_NOT_BELONGTO_SENDER
             self.id_job_map.pop(job_id, None)
             file_data = {}
             with open(os.path.join(self.temp_pwd, 'jobs.json'), 'r') as data_file:
@@ -240,11 +171,10 @@ class JobBot(WXBot):
             with open(os.path.join(self.temp_pwd, 'jobs.json'), 'w') as data_file:
                 for entry in file_data:
                     data_file.write(ujson.dumps(entry) + '\n')
-            note = MSG_DELETE_SUCCESS.format(job_id.encode('utf-8'))
-            self.respond_to_user(msg, note)
+            return MSG_DELETE_SUCCESS.format(job_id.encode('utf-8'))
         except:
             traceback.print_exc()
-            self.respond_to_user(msg, MSG_DELETE_ERROR)
+            return MSG_DELETE_ERROR
 
 
 def main():
