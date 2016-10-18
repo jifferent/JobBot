@@ -1,6 +1,8 @@
-# wxBot [![star this repo](http://github-svg-buttons.herokuapp.com/star.svg?user=liuwons&repo=wxBot&style=flat&background=1081C1)](http://github.com/liuwons/wxBot) [![fork this repo](http://github-svg-buttons.herokuapp.com/fork.svg?user=liuwons&repo=wxBot&style=flat&background=1081C1)](http://github.com/liuwons/wxBot/fork) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg)
-
 **wxBot** 是用Python包装Web微信协议实现的微信机器人框架。
+
+This is projet base on: https://github.com/liuwons/wxBot
+
+This wxbot is designed to process job post and job seeking in wechat group.
 
 目前的消息支持情况:
 
@@ -267,8 +269,6 @@ python test.py
 
 [zixia/wechaty](https://github.com/zixia/wechaty) Wechaty is wechat for bot in Javascript(ES6). It's a Personal Account Robot Framework/Library.
 
-## 7 交流讨论
+## 7 Help needed
 
-问题可以直接开 **issue**
 
-**QQ** 交流群： **429134510**
