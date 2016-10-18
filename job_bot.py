@@ -3,7 +3,7 @@
 
 from wxbot import *
 import ConfigParser
-import ujson
+import json
 import sys
 import traceback
 import random
@@ -27,7 +27,7 @@ class JobBot(WXBot):
         self.id_job_map = {}
         with open(os.path.join(self.temp_pwd, 'jobs.json'), 'r') as data_file:
             for line in data_file:
-                entry = ujson.loads(line.strip())
+                entry = json.loads(line.strip())
                 self.id_job_map[entry['id']] = entry
 
     def handle_msg_all(self, msg):
@@ -136,7 +136,7 @@ class JobBot(WXBot):
                 if job['id'] not in self.id_job_map:
                     break
             with open(os.path.join(self.temp_pwd, 'jobs.json'), 'a') as data_file:
-                data_file.write(ujson.dumps(job) + '\n')
+                data_file.write(json.dumps(job) + '\n')
             self.id_job_map[job["id"]] = job
             return MSG_PUSH_SUCCESS.format(job['id'].encode('utf-8'))
         except:
@@ -165,12 +165,12 @@ class JobBot(WXBot):
             file_data = {}
             with open(os.path.join(self.temp_pwd, 'jobs.json'), 'r') as data_file:
                 for line in data_file:
-                    entry = ujson.loads(line.strip())
+                    entry = json.loads(line.strip())
                     file_data[entry['id']] = entry
             file_data.pop(job_id, None)
             with open(os.path.join(self.temp_pwd, 'jobs.json'), 'w') as data_file:
                 for entry in file_data:
-                    data_file.write(ujson.dumps(entry) + '\n')
+                    data_file.write(json.dumps(entry) + '\n')
             return MSG_DELETE_SUCCESS.format(job_id.encode('utf-8'))
         except:
             traceback.print_exc()
